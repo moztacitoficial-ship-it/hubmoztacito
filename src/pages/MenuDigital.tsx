@@ -154,7 +154,16 @@ export default function MenuDigital() {
             productosFiltrados.map(producto => (
               <div key={producto.id} className="menu-list-item">
                 <div className="item-img">
-                  {producto.imagen_url ? (
+                  {producto.video_url ? (
+                    <video 
+                      src={producto.video_url} 
+                      autoPlay 
+                      loop 
+                      muted 
+                      playsInline 
+                      style={{width: '100%', height: '100%', objectFit: 'cover'}}
+                    />
+                  ) : producto.imagen_url ? (
                     <img src={producto.imagen_url} alt={producto.nombre} />
                   ) : (
                     <div className="img-placeholder"></div>

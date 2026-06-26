@@ -5,5 +5,6 @@ export interface Producto {
   imagen_url: string;
   categoria: string;
   descripcion: string;
+  video_url?: string;
   created_at: string;
 }

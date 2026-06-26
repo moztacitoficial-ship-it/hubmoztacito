@@ -2,8 +2,27 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Producto } from '../types';
 import './Admin.css';
+import { Plus, X, Video, Image as ImageIcon } from 'lucide-react';
 
 const SECRET_PIN = '0000';
+
+type ProductFormData = {
+  nombre: string;
+  descripcion: string;
+  precio: string;
+  categoria: string;
+  imagen_url: string;
+  video_url: string;
+};
+
+const emptyProduct: ProductFormData = {
+  nombre: '',
+  descripcion: '',
+  precio: '',
+  categoria: 'bebe',
+  imagen_url: '',
+  video_url: ''
+};
 
 export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -12,13 +31,12 @@ export default function Admin() {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Form state
+  // Bulk Add State
+  const [bulkForms, setBulkForms] = useState<ProductFormData[]>([{ ...emptyProduct }]);
+  
+  // Edit State
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [nombre, setNombre] = useState('');
-  const [descripcion, setDescripcion] = useState('');
-  const [precio, setPrecio] = useState('');
-  const [categoria, setCategoria] = useState('bebe');
-  const [imagenUrl, setImagenUrl] = useState('');
+  const [editForm, setEditForm] = useState<ProductFormData>({ ...emptyProduct });
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -44,13 +62,17 @@ export default function Admin() {
     }
   };
 
+  // --- EDIT LOGIC ---
   const handleEditClick = (producto: Producto) => {
     setEditingId(producto.id);
-    setNombre(producto.nombre);
-    setDescripcion(producto.descripcion || '');
-    setPrecio(producto.precio.toString());
-    setCategoria(producto.categoria);
-    setImagenUrl(producto.imagen_url || '');
+    setEditForm({
+      nombre: producto.nombre,
+      descripcion: producto.descripcion || '',
+      precio: producto.precio.toString(),
+      categoria: producto.categoria,
+      imagen_url: producto.imagen_url || '',
+      video_url: producto.video_url || ''
+    });
     
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -58,49 +80,88 @@ export default function Admin() {
 
   const cancelEdit = () => {
     setEditingId(null);
-    setNombre('');
-    setDescripcion('');
-    setPrecio('');
-    setImagenUrl('');
+    setEditForm({ ...emptyProduct });
   };
 
-  const handleAddOrUpdateProduct = async (e: React.FormEvent) => {
+  const handleUpdateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!editingId) return;
     setLoading(true);
 
     const productData = {
-      nombre,
-      descripcion,
-      precio: parseFloat(precio),
-      categoria,
-      imagen_url: imagenUrl,
-      stock: 100 // Default stock
+      nombre: editForm.nombre,
+      descripcion: editForm.descripcion,
+      precio: parseFloat(editForm.precio),
+      categoria: editForm.categoria,
+      imagen_url: editForm.imagen_url,
+      video_url: editForm.video_url || null,
     };
 
-    let error;
-
-    if (editingId) {
-      // Update
-      const response = await supabase
-        .from('productos')
-        .update(productData)
-        .eq('id', editingId);
-      error = response.error;
-    } else {
-      // Insert
-      const response = await supabase
-        .from('productos')
-        .insert([productData]);
-      error = response.error;
-    }
+    const { error } = await supabase
+      .from('productos')
+      .update(productData)
+      .eq('id', editingId);
     
     setLoading(false);
     
     if (error) {
-      alert('Error guardando producto: ' + error.message);
+      alert('Error actualizando producto: ' + error.message);
     } else {
-      alert(editingId ? '¡Producto actualizado exitosamente!' : '¡Producto subido exitosamente!');
+      alert('¡Producto actualizado exitosamente!');
       cancelEdit();
+      cargarProductos();
+    }
+  };
+
+  // --- BULK ADD LOGIC ---
+  const addBulkRow = () => {
+    setBulkForms([...bulkForms, { ...emptyProduct }]);
+  };
+
+  const removeBulkRow = (index: number) => {
+    const newForms = [...bulkForms];
+    newForms.splice(index, 1);
+    setBulkForms(newForms.length ? newForms : [{ ...emptyProduct }]);
+  };
+
+  const updateBulkForm = (index: number, field: keyof ProductFormData, value: string) => {
+    const newForms = [...bulkForms];
+    newForms[index] = { ...newForms[index], [field]: value };
+    setBulkForms(newForms);
+  };
+
+  const handleBulkSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    // Filter out completely empty rows
+    const validForms = bulkForms.filter(f => f.nombre.trim() !== '' && f.precio !== '');
+
+    if (validForms.length === 0) {
+      alert('Por favor, llena al menos un producto.');
+      setLoading(false);
+      return;
+    }
+
+    const newProducts = validForms.map(f => ({
+      nombre: f.nombre,
+      descripcion: f.descripcion,
+      precio: parseFloat(f.precio),
+      categoria: f.categoria,
+      imagen_url: f.imagen_url,
+      video_url: f.video_url || null,
+      stock: 100
+    }));
+
+    const { error } = await supabase.from('productos').insert(newProducts);
+    
+    setLoading(false);
+    
+    if (error) {
+      alert('Error subiendo productos: ' + error.message);
+    } else {
+      alert(`¡${validForms.length} productos subidos exitosamente!`);
+      setBulkForms([{ ...emptyProduct }]);
       cargarProductos();
     }
   };
@@ -144,55 +205,113 @@ export default function Admin() {
       <div className="admin-dashboard">
         <h2>Gestor de Productos Moztacito</h2>
         
-        <form onSubmit={handleAddOrUpdateProduct} className="admin-form">
-          <h3>{editingId ? '✏️ Actualizar Producto' : 'Subir Nuevo Producto de Temu'}</h3>
-          
-          <div className="form-group">
-            <label>Nombre del Producto</label>
-            <input required type="text" value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Ej. Pijama Enterizo Dinosaurio" />
-          </div>
+        {editingId ? (
+          // EDIT FORM
+          <form onSubmit={handleUpdateProduct} className="admin-form">
+            <h3>✏️ Actualizar Producto</h3>
+            
+            <div className="form-group">
+              <label>Nombre del Producto</label>
+              <input required type="text" value={editForm.nombre} onChange={e => setEditForm({...editForm, nombre: e.target.value})} />
+            </div>
 
-          <div className="form-group">
-            <label>Descripción (Opcional)</label>
-            <textarea value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Talla, material, detalles..."></textarea>
-          </div>
+            <div className="form-group">
+              <label>Descripción (Opcional)</label>
+              <textarea value={editForm.descripcion} onChange={e => setEditForm({...editForm, descripcion: e.target.value})}></textarea>
+            </div>
 
-          <div className="form-group">
-            <label>Precio de Venta ($ COP)</label>
-            <input required type="number" step="0.01" value={precio} onChange={e => setPrecio(e.target.value)} placeholder="Ej. 45000" />
-          </div>
+            <div className="form-row" style={{display: 'flex', gap: '1rem'}}>
+              <div className="form-group" style={{flex: 1}}>
+                <label>Precio de Venta ($ COP)</label>
+                <input required type="number" step="0.01" value={editForm.precio} onChange={e => setEditForm({...editForm, precio: e.target.value})} />
+              </div>
+              <div className="form-group" style={{flex: 1}}>
+                <label>Categoría</label>
+                <select value={editForm.categoria} onChange={e => setEditForm({...editForm, categoria: e.target.value})}>
+                  <option value="bebe">Ropa de Bebés</option>
+                  <option value="pijamas">Pijamas Infantiles</option>
+                  <option value="mamelucos">Mamelucos</option>
+                </select>
+              </div>
+            </div>
 
-          <div className="form-group">
-            <label>Categoría</label>
-            <select value={categoria} onChange={e => setCategoria(e.target.value)}>
-              <option value="bebe">Ropa de Bebés</option>
-              <option value="pijamas">Pijamas Infantiles</option>
-              <option value="mamelucos">Mamelucos</option>
-            </select>
-          </div>
+            <div className="form-group">
+              <label>Enlace de la Foto (Obligatorio)</label>
+              <input required type="url" value={editForm.imagen_url} onChange={e => setEditForm({...editForm, imagen_url: e.target.value})} />
+            </div>
 
-          <div className="form-group">
-            <label>Enlace de la Foto (URL de Temu o de la web)</label>
-            <input type="url" value={imagenUrl} onChange={e => setImagenUrl(e.target.value)} placeholder="https://..." />
-          </div>
+            <div className="form-group">
+              <label>Enlace del Video de Temu (Opcional)</label>
+              <input type="url" value={editForm.video_url} onChange={e => setEditForm({...editForm, video_url: e.target.value})} placeholder="https://...mp4" />
+            </div>
 
-          <div style={{display: 'flex', gap: '1rem'}}>
-            <button type="submit" disabled={loading} style={{flex: 1}}>
-              {loading ? 'Guardando...' : (editingId ? 'Guardar Cambios' : '🚀 Publicar en la Tienda')}
-            </button>
-            {editingId && (
+            <div style={{display: 'flex', gap: '1rem'}}>
+              <button type="submit" disabled={loading} style={{flex: 1}}>
+                {loading ? 'Guardando...' : 'Guardar Cambios'}
+              </button>
               <button type="button" onClick={cancelEdit} style={{backgroundColor: '#ccc', color: '#333'}}>
                 Cancelar
               </button>
-            )}
-          </div>
-        </form>
+            </div>
+          </form>
+        ) : (
+          // BULK ADD FORM
+          <form onSubmit={handleBulkSubmit} className="admin-form">
+            <h3>🚀 Subida Rápida (Carga Múltiple)</h3>
+            <p style={{fontSize: '0.85rem', color: '#666', marginBottom: '1rem'}}>Llena tantas filas como quieras y súbelas todas al mismo tiempo.</p>
+            
+            <div className="bulk-container">
+              {bulkForms.map((form, index) => (
+                <div key={index} className="bulk-row">
+                  <div className="bulk-header">
+                    <h4>Producto {index + 1}</h4>
+                    {bulkForms.length > 1 && (
+                      <button type="button" onClick={() => removeBulkRow(index)} className="bulk-remove"><X size={16}/></button>
+                    )}
+                  </div>
+                  
+                  <div className="form-group">
+                    <input required type="text" value={form.nombre} onChange={e => updateBulkForm(index, 'nombre', e.target.value)} placeholder="Nombre del Producto" />
+                  </div>
+
+                  <div className="bulk-grid" style={{display: 'flex', gap: '0.5rem', marginBottom: '0.5rem'}}>
+                    <input required type="number" step="0.01" value={form.precio} onChange={e => updateBulkForm(index, 'precio', e.target.value)} placeholder="Precio ($ COP)" style={{flex: 1}} />
+                    <select value={form.categoria} onChange={e => updateBulkForm(index, 'categoria', e.target.value)} style={{flex: 1}}>
+                      <option value="bebe">Ropa Bebés</option>
+                      <option value="pijamas">Pijamas</option>
+                      <option value="mamelucos">Mamelucos</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <input required type="url" value={form.imagen_url} onChange={e => updateBulkForm(index, 'imagen_url', e.target.value)} placeholder="URL de la Foto" />
+                  </div>
+                  <div className="form-group">
+                    <input type="url" value={form.video_url} onChange={e => updateBulkForm(index, 'video_url', e.target.value)} placeholder="URL del Video (Opcional)" />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{display: 'flex', gap: '1rem', marginTop: '1rem'}}>
+              <button type="button" onClick={addBulkRow} style={{backgroundColor: '#f36b8e', color: 'white', flex: 1, display: 'flex', justifyContent: 'center', gap: '0.5rem'}}>
+                <Plus size={20} /> Añadir otra fila
+              </button>
+              <button type="submit" disabled={loading} style={{flex: 2}}>
+                {loading ? 'Subiendo...' : `Subir ${bulkForms.length} producto(s) ahora`}
+              </button>
+            </div>
+          </form>
+        )}
 
         <div className="product-list">
           <h3>Tus Productos Activos ({productos.length})</h3>
           {productos.map(p => (
             <div key={p.id} className="admin-product-item">
-              <img src={p.imagen_url || ''} alt="" />
+              <div className="admin-product-media">
+                <img src={p.imagen_url || ''} alt="" />
+                {p.video_url && <div className="video-badge"><Video size={12}/> Video</div>}
+              </div>
               <div className="admin-product-info">
                 <h4>{p.nombre}</h4>
                 <p>${p.precio} - Categoría: {p.categoria}</p>

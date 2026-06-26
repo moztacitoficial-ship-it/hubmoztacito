@@ -167,3 +167,66 @@
 .delete-btn:hover {
   background-color: #cc0000;
 }
+
+/* Bulk Add Styles */
+.bulk-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.bulk-row {
+  background: #f9f9f9;
+  border: 1px solid #eee;
+  padding: 1.5rem;
+  border-radius: 12px;
+  position: relative;
+}
+
+.bulk-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.bulk-header h4 {
+  color: var(--primary);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.bulk-remove {
+  background: none;
+  border: none;
+  color: #ff4444;
+  cursor: pointer;
+  padding: 0.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bulk-remove:hover {
+  background-color: #ffe6e6;
+  border-radius: 50%;
+}
+
+.admin-product-media {
+  position: relative;
+}
+
+.video-badge {
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+  background-color: #000;
+  color: white;
+  font-size: 0.6rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-weight: bold;
+}
