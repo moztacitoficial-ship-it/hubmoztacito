@@ -95,18 +95,23 @@ export default function Admin() {
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
     setLoading(true);
     try {
-      const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${file.name.split('.').pop()}`;
-      const { error: uploadError } = await supabase.storage.from('archivos').upload(fileName, file);
-      if (uploadError) throw uploadError;
-      const { data } = supabase.storage.from('archivos').getPublicUrl(fileName);
-      updateBulkForm(index, 'imagen_url', data.publicUrl);
-      showToast('Foto subida exitosamente ✓');
+      const uploadedUrls: string[] = [];
+      for (const file of files) {
+        const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${file.name.split('.').pop()}`;
+        const { error: uploadError } = await supabase.storage.from('archivos').upload(fileName, file);
+        if (uploadError) throw uploadError;
+        const { data } = supabase.storage.from('archivos').getPublicUrl(fileName);
+        uploadedUrls.push(data.publicUrl);
+      }
+      // La primera imagen queda como imagen principal
+      updateBulkForm(index, 'imagen_url', uploadedUrls[0]);
+      showToast(`${uploadedUrls.length} foto(s) subida(s) ✓`);
     } catch {
-      showToast('Error al subir foto', 'error');
+      showToast('Error al subir foto(s)', 'error');
     } finally {
       setLoading(false);
     }
@@ -235,6 +240,20 @@ export default function Admin() {
       let img = doc.querySelector('meta[property="og:image"]')?.getAttribute('content') || '';
       if (img && img.startsWith('//')) {
         img = 'https:' + img;
+      }
+
+      // Si og:image no dio resultado, buscar en el HTML crudo la primera imagen del CDN de Temu
+      if (!img) {
+        const temuImgMatch = html.match(/https:\/\/img\.kwcdn\.com\/product\/[^"'\s]+/);
+        if (temuImgMatch) {
+          // Limpiar parámetros de tamaño y obtener imagen grande
+          img = temuImgMatch[0].split('?')[0];
+        }
+      }
+      // Si sigue vacío, buscar cualquier imagen con 'product' en la URL de Temu
+      if (!img) {
+        const fallbackMatch = html.match(/https:\/\/[^"'\s]*temu[^"'\s]*\.(?:jpg|jpeg|png|webp)/);
+        if (fallbackMatch) img = fallbackMatch[0];
       }
 
       let extractedPrice: number | null = null;
@@ -564,8 +583,8 @@ export default function Admin() {
                               <Zap size={12} /> AutoFill
                             </button>
                             <label className="btn-upload-img">
-                              <Upload size={12} /> Subir Foto
-                              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleFileUpload(e, index)} />
+                              <Upload size={12} /> Subir Fotos
+                              <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={e => handleFileUpload(e, index)} />
                             </label>
                             {bulkForms.length > 1 && (
                               <button type="button" className="btn-remove-row" onClick={() => {
