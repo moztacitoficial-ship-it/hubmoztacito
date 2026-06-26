@@ -68,12 +68,24 @@ export default function MenuDigital() {
     }
   };
 
+  const catActual = categorias.find(c => c.slug === filtroCategoria);
   let productosFiltrados = filtroCategoria === 'todos' 
     ? productos 
-    : productos.filter(p => p.categoria === filtroCategoria || p.categoria === categorias.find(c => c.slug === filtroCategoria)?.nombre);
+    : productos.filter(p => {
+        const pCat = (p.categoria || '').toLowerCase().trim();
+        return pCat === filtroCategoria.toLowerCase().trim()
+          || pCat === (catActual?.nombre || '').toLowerCase().trim()
+          || pCat === (catActual?.slug || '').toLowerCase().trim();
+      });
 
   if (filtroCategoria !== 'todos' && filtroSubcategoria !== 'todas') {
-    productosFiltrados = productosFiltrados.filter(p => p.subcategoria === filtroSubcategoria || p.subcategoria === subcategorias.find(s => s.slug === filtroSubcategoria)?.nombre);
+    const subcatActual = subcategorias.find(s => s.slug === filtroSubcategoria);
+    productosFiltrados = productosFiltrados.filter(p => {
+      const pSub = (p.subcategoria || '').toLowerCase().trim();
+      return pSub === filtroSubcategoria.toLowerCase().trim()
+        || pSub === (subcatActual?.nombre || '').toLowerCase().trim()
+        || pSub === (subcatActual?.slug || '').toLowerCase().trim();
+    });
   }
 
   const totalItems = items.reduce((sum, item) => sum + item.cantidad, 0);
@@ -234,7 +246,7 @@ export default function MenuDigital() {
                 <div className="item-details">
                   <h4>{producto.nombre}</h4>
                   <p className="item-desc">{producto.descripcion?.substring(0, 60)}...</p>
-                  <p className="item-price">${producto.precio.toFixed(2)}</p>
+                  <p className="item-price">${producto.precio.toLocaleString('es-CO')}</p>
                 </div>
                 <button 
                   className="item-add-btn" 
@@ -256,7 +268,7 @@ export default function MenuDigital() {
             <ShoppingBag size={24} />
             <span className="cart-badge">{totalItems}</span>
           </div>
-          <span className="cart-total-float">Ver Carrito - ${total.toFixed(2)}</span>
+          <span className="cart-total-float">Ver Carrito - ${total.toLocaleString('es-CO')}</span>
         </button>
       )}
 
@@ -323,7 +335,7 @@ export default function MenuDigital() {
                 <div className="cart-footer" style={{ marginTop: 'auto' }}>
                   <div className="cart-total">
                     <span>Total a Pagar:</span>
-                    <span>${total.toFixed(2)}</span>
+                    <span>${total.toLocaleString('es-CO')}</span>
                   </div>
                   <button type="submit" className="checkout-btn whatsapp-submit">
                     Enviar Pedido por WhatsApp
@@ -351,7 +363,7 @@ export default function MenuDigital() {
                         <div className="cart-item-details">
                           <h4>{item.nombre}</h4>
                           {item.talla && <p style={{fontSize: '0.8rem', color: '#666', margin: '2px 0'}}>Talla: {item.talla}</p>}
-                          <p className="cart-item-price">${(item.precio * item.cantidad).toFixed(2)}</p>
+                          <p className="cart-item-price">${(item.precio * item.cantidad).toLocaleString('es-CO')}</p>
                           <div className="cart-item-qty">
                             <button onClick={() => updateQuantity(item.id, item.cantidad - 1, item.talla)}>-</button>
                             <span>{item.cantidad}</span>
@@ -369,7 +381,7 @@ export default function MenuDigital() {
                 <div className="cart-footer">
                   <div className="cart-total">
                     <span>Total:</span>
-                    <span>${total.toFixed(2)}</span>
+                    <span>${total.toLocaleString('es-CO')}</span>
                   </div>
                   <button 
                     className="checkout-btn" 

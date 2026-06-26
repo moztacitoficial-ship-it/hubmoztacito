@@ -12,7 +12,7 @@ type ProductFormData = {
   precio: string;
   categoria: string;
   subcategoria: string;
-  imagen_url: string;
+  imagenes: string[];
   video_url: string;
   tallas: string;
 };
@@ -23,7 +23,7 @@ const emptyProduct: ProductFormData = {
   precio: '',
   categoria: '',
   subcategoria: '',
-  imagen_url: '',
+  imagenes: [''],
   video_url: '',
   tallas: ''
 };
@@ -94,7 +94,7 @@ export default function Admin() {
     setBulkForms(newForms);
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, formIndex: number, imgIndex: number) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
     setLoading(true);
@@ -107,14 +107,40 @@ export default function Admin() {
         const { data } = supabase.storage.from('archivos').getPublicUrl(fileName);
         uploadedUrls.push(data.publicUrl);
       }
-      // La primera imagen queda como imagen principal
-      updateBulkForm(index, 'imagen_url', uploadedUrls[0]);
+      // Insertar las URLs subidas a partir de la posición imgIndex
+      const newForms = [...bulkForms];
+      const newImagenes = [...newForms[formIndex].imagenes];
+      newImagenes.splice(imgIndex, 1, ...uploadedUrls);
+      // Agregar filas extra si se subieron más de una imagen
+      newForms[formIndex] = { ...newForms[formIndex], imagenes: newImagenes };
+      setBulkForms(newForms);
       showToast(`${uploadedUrls.length} foto(s) subida(s) ✓`);
     } catch {
       showToast('Error al subir foto(s)', 'error');
     } finally {
       setLoading(false);
     }
+  };
+
+  const updateImagenUrl = (formIndex: number, imgIndex: number, value: string) => {
+    const newForms = [...bulkForms];
+    const newImagenes = [...newForms[formIndex].imagenes];
+    newImagenes[imgIndex] = value;
+    newForms[formIndex] = { ...newForms[formIndex], imagenes: newImagenes };
+    setBulkForms(newForms);
+  };
+
+  const addImagenRow = (formIndex: number) => {
+    const newForms = [...bulkForms];
+    newForms[formIndex] = { ...newForms[formIndex], imagenes: [...newForms[formIndex].imagenes, ''] };
+    setBulkForms(newForms);
+  };
+
+  const removeImagenRow = (formIndex: number, imgIndex: number) => {
+    const newForms = [...bulkForms];
+    const newImagenes = newForms[formIndex].imagenes.filter((_, i) => i !== imgIndex);
+    newForms[formIndex] = { ...newForms[formIndex], imagenes: newImagenes.length > 0 ? newImagenes : [''] };
+    setBulkForms(newForms);
   };
 
   const handleAutoFill = async (index: number) => {
@@ -231,7 +257,10 @@ export default function Admin() {
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, 'text/html');
 
-      const rawTitle = doc.querySelector('meta[property="og:title"]')?.getAttribute('content')?.replace(/\| Temu.*/g, '').trim() || '';
+      const rawTitle = doc.querySelector('meta[property="og:title"]')?.getAttribute('content')
+        ?.replace(/[-|]\s*(Temu|temu)[\s\S]*/g, '')
+        ?.replace(/\s+/g, ' ')
+        .trim() || '';
       const rawDesc = doc.querySelector('meta[name="description"]')?.getAttribute('content') || doc.querySelector('meta[property="og:description"]')?.getAttribute('content') || '';
 
       const translatedTitle = await translateToSpanish(rawTitle);
@@ -314,7 +343,7 @@ export default function Admin() {
         nombre: translatedTitle,
         descripcion: translatedDesc,
         precio: finalPrice,
-        imagen_url: img,
+        imagenes: img ? [img] : [''],
         tallas: sizesStr
       };
       setBulkForms(newForms);
@@ -336,7 +365,7 @@ export default function Admin() {
       precio: parseFloat(f.precio),
       categoria: f.categoria,
       subcategoria: f.subcategoria || null,
-      imagen_url: f.imagen_url,
+      imagen_url: f.imagenes.find(u => u.trim()) || '',
       video_url: f.video_url || null,
       tallas: f.tallas || null
     }));
@@ -584,7 +613,7 @@ export default function Admin() {
                             </button>
                             <label className="btn-upload-img">
                               <Upload size={12} /> Subir Fotos
-                              <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={e => handleFileUpload(e, index)} />
+                              <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={e => handleFileUpload(e, index, 0)} />
                             </label>
                             {bulkForms.length > 1 && (
                               <button type="button" className="btn-remove-row" onClick={() => {
@@ -620,10 +649,57 @@ export default function Admin() {
                             <input value={form.tallas} onChange={e => updateBulkForm(index, 'tallas', e.target.value)} placeholder="Ej: 6 Meses, 12 Meses, 18 Meses" />
                           </div>
                           <div className="form-field full">
-                            <label>URL de Imagen</label>
-                            <div className="img-input-row">
-                              {form.imagen_url && <img src={form.imagen_url} className="img-preview-thumb" alt="" onError={e => (e.currentTarget.style.display = 'none')} />}
-                              <input value={form.imagen_url} onChange={e => updateBulkForm(index, 'imagen_url', e.target.value)} placeholder="https://..." />
+                            <label>🖼️ Imágenes del Producto</label>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                              {form.imagenes.map((imgUrl, imgIdx) => (
+                                <div key={imgIdx} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', background: '#f8fafc', borderRadius: '12px', padding: '0.8rem', border: '1px solid #e2e8f0', minHeight: '170px' }}>
+                                  {imgUrl ? (
+                                    <img
+                                      src={imgUrl}
+                                      style={{ width: 160, height: 160, borderRadius: 10, objectFit: 'cover', flexShrink: 0, border: '2px solid #cbd5e1', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+                                      alt=""
+                                      onError={e => (e.currentTarget.style.display = 'none')}
+                                    />
+                                  ) : (
+                                    <div style={{ width: 160, height: 160, borderRadius: 10, flexShrink: 0, background: '#e2e8f0', border: '2px dashed #94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '0.4rem', color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600 }}>
+                                      <span style={{ fontSize: '2rem' }}>🖼️</span>
+                                      <span>Sin imagen</span>
+                                    </div>
+                                  )}
+                                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                    <input
+                                      value={imgUrl}
+                                      onChange={e => updateImagenUrl(index, imgIdx, e.target.value)}
+                                      placeholder={imgIdx === 0 ? 'URL de imagen principal...' : 'URL de imagen extra...'}
+                                    />
+                                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                      <label className="btn-upload-img" style={{ fontSize: '0.75rem', padding: '0.4rem 0.9rem', cursor: 'pointer' }}>
+                                        <Upload size={12} /> Subir archivo(s)
+                                        <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={e => handleFileUpload(e, index, imgIdx)} />
+                                      </label>
+                                      {imgIdx === 0 && (
+                                        <span style={{ fontSize: '0.7rem', color: '#0ea5e9', fontWeight: 700, alignSelf: 'center', background: 'rgba(14,165,233,0.1)', padding: '0.2rem 0.6rem', borderRadius: 6 }}>★ Principal</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  {form.imagenes.length > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => removeImagenRow(index, imgIdx)}
+                                      style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.3rem', borderRadius: 6, marginLeft: 'auto' }}
+                                    >
+                                      <X size={16} />
+                                    </button>
+                                  )}
+                                </div>
+                              ))}
+                              <button
+                                type="button"
+                                onClick={() => addImagenRow(index)}
+                                style={{ alignSelf: 'flex-start', background: 'rgba(14,165,233,0.08)', border: '1px dashed #0ea5e9', color: '#0ea5e9', borderRadius: 8, padding: '0.4rem 1rem', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                              >
+                                <Plus size={13} /> Agregar URL
+                              </button>
                             </div>
                           </div>
                           <div className="form-field full">
