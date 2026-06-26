@@ -9,6 +9,7 @@ export default function MenuDigital() {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [cargando, setCargando] = useState(true);
   const [filtroCategoria, setFiltroCategoria] = useState<string>('todos');
+  const [filtroSubcategoria, setFiltroSubcategoria] = useState<string>('todas');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutMode, setIsCheckoutMode] = useState(false);
   
@@ -58,9 +59,13 @@ export default function MenuDigital() {
     }
   };
 
-  const productosFiltrados = filtroCategoria === 'todos' 
+  let productosFiltrados = filtroCategoria === 'todos' 
     ? productos 
     : productos.filter(p => p.categoria === filtroCategoria);
+
+  if (filtroCategoria === 'bebe' && filtroSubcategoria !== 'todas') {
+    productosFiltrados = productosFiltrados.filter(p => p.subcategoria === filtroSubcategoria);
+  }
 
   const totalItems = items.reduce((sum, item) => sum + item.cantidad, 0);
 

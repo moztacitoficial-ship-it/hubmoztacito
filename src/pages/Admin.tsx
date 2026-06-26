@@ -11,6 +11,7 @@ type ProductFormData = {
   descripcion: string;
   precio: string;
   categoria: string;
+  subcategoria: string;
   imagen_url: string;
   video_url: string;
   tallas: string;
@@ -21,6 +22,7 @@ const emptyProduct: ProductFormData = {
   descripcion: '',
   precio: '',
   categoria: 'bebe',
+  subcategoria: '',
   imagen_url: '',
   video_url: '',
   tallas: ''
@@ -72,6 +74,7 @@ export default function Admin() {
       descripcion: producto.descripcion || '',
       precio: producto.precio.toString(),
       categoria: producto.categoria,
+      subcategoria: producto.subcategoria || '',
       imagen_url: producto.imagen_url || '',
       video_url: producto.video_url || '',
       tallas: producto.tallas || ''
@@ -96,6 +99,7 @@ export default function Admin() {
       descripcion: editForm.descripcion,
       precio: parseFloat(editForm.precio),
       categoria: editForm.categoria,
+      subcategoria: editForm.subcategoria || null,
       imagen_url: editForm.imagen_url,
       video_url: editForm.video_url || null,
       tallas: editForm.tallas || null,
@@ -193,6 +197,7 @@ export default function Admin() {
       descripcion: f.descripcion,
       precio: parseFloat(f.precio),
       categoria: f.categoria,
+      subcategoria: f.subcategoria || null,
       imagen_url: f.imagen_url,
       video_url: f.video_url || null,
       tallas: f.tallas || null,
@@ -275,10 +280,20 @@ export default function Admin() {
                 <label>Categoría</label>
                 <select value={editForm.categoria} onChange={e => setEditForm({...editForm, categoria: e.target.value})}>
                   <option value="bebe">Ropa de Bebés</option>
-                  <option value="pijamas">Pijamas Infantiles</option>
-                  <option value="mamelucos">Mamelucos</option>
+                  <option value="accesorios">Accesorios</option>
                 </select>
               </div>
+              {editForm.categoria === 'bebe' && (
+                <div className="form-group" style={{flex: 1}}>
+                  <label>Subcategoría</label>
+                  <select value={editForm.subcategoria} onChange={e => setEditForm({...editForm, subcategoria: e.target.value})}>
+                    <option value="">Todas</option>
+                    <option value="mamelucos">Mamelucos</option>
+                    <option value="pijamas">Pijamas</option>
+                    <option value="conjuntos">Conjuntos</option>
+                  </select>
+                </div>
+              )}
             </div>
 
             <div className="form-group">
@@ -339,12 +354,24 @@ export default function Admin() {
                       <input required type="number" step="0.01" value={form.precio} onChange={e => updateBulkForm(index, 'precio', e.target.value)} placeholder="Precio ($ COP)" />
                     </div>
                     <div className="form-group" style={{flex: 1, marginBottom: 0}}>
-                      <select value={form.categoria} onChange={e => updateBulkForm(index, 'categoria', e.target.value)} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ccc', backgroundColor: 'white'}}>
-                        <option value="bebe">Categoría: Ropa Bebés</option>
-                        <option value="pijamas">Categoría: Pijamas</option>
-                        <option value="mamelucos">Categoría: Mamelucos</option>
+                      <select value={form.categoria} onChange={e => {
+                        updateBulkForm(index, 'categoria', e.target.value);
+                        if (e.target.value !== 'bebe') updateBulkForm(index, 'subcategoria', '');
+                      }} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ccc', backgroundColor: 'white'}}>
+                        <option value="bebe">Cat: Ropa Bebés</option>
+                        <option value="accesorios">Cat: Accesorios</option>
                       </select>
                     </div>
+                    {form.categoria === 'bebe' && (
+                      <div className="form-group" style={{flex: 1, marginBottom: 0}}>
+                        <select value={form.subcategoria} onChange={e => updateBulkForm(index, 'subcategoria', e.target.value)} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ccc', backgroundColor: 'white'}}>
+                          <option value="">Subcat: Todas</option>
+                          <option value="mamelucos">Mamelucos</option>
+                          <option value="pijamas">Pijamas</option>
+                          <option value="conjuntos">Conjuntos</option>
+                        </select>
+                      </div>
+                    )}
                   </div>
 
                   <div className="form-group">

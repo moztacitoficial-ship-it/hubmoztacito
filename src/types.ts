@@ -4,6 +4,7 @@ export interface Producto {
   precio: number;
   imagen_url: string;
   categoria: string;
+  subcategoria?: string;
   descripcion: string;
   video_url?: string;
   tallas?: string;
