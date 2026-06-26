@@ -113,19 +113,171 @@ export default function Admin() {
     const url = prompt('🔗 Pega el enlace de Temu o cualquier tienda:');
     if (!url) return;
     setLoading(true);
+
+    const translateToSpanish = async (text: string): Promise<string> => {
+      if (!text) return '';
+      const clean = text.replace(/<[^>]*>/g, '').trim();
+      if (!clean) return '';
+      try {
+        const transUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=es&dt=t&q=${encodeURIComponent(clean)}`;
+        const res = await fetch(transUrl);
+        const json = await res.json();
+        if (json && json[0]) {
+          return json[0].map((item: any) => item[0]).join('').trim();
+        }
+        return clean;
+      } catch (e) {
+        console.error('Translation error:', e);
+        return clean;
+      }
+    };
+
+    const extractSizes = (docObj: Document): string => {
+      const textToSearch = (docObj.title + ' ' + (docObj.querySelector('meta[name="description"]')?.getAttribute('content') || '') + ' ' + (docObj.body?.textContent || '')).toLowerCase();
+      const foundSizes: string[] = [];
+
+      const babyPatterns = [
+        { regex: /\b0[-_]3\s*m(?:es)?(?:es)?\b/gi, label: '0-3 Meses' },
+        { regex: /\b3[-_]6\s*m(?:es)?(?:es)?\b/gi, label: '3-6 Meses' },
+        { regex: /\b6[-_]9\s*m(?:es)?(?:es)?\b/gi, label: '6-9 Meses' },
+        { regex: /\b9[-_]12\s*m(?:es)?(?:es)?\b/gi, label: '9-12 Meses' },
+        { regex: /\b12[-_]18\s*m(?:es)?(?:es)?\b/gi, label: '12-18 Meses' },
+        { regex: /\b18[-_]24\s*m(?:es)?(?:es)?\b/gi, label: '18-24 Meses' },
+        { regex: /\b2\s*t\b/gi, label: '2T' },
+        { regex: /\b3\s*t\b/gi, label: '3T' },
+        { regex: /\b4\s*t\b/gi, label: '4T' },
+        { regex: /\b5\s*t\b/gi, label: '5T' },
+        { regex: /\b6\s*t\b/gi, label: '6T' }
+      ];
+
+      babyPatterns.forEach(p => {
+        if (p.regex.test(textToSearch)) {
+          foundSizes.push(p.label);
+        }
+      });
+
+      const jsonLdScripts = docObj.querySelectorAll('script[type="application/ld+json"]');
+      jsonLdScripts.forEach(script => {
+        try {
+          const data = JSON.parse(script.textContent || '');
+          const searchSizes = (obj: any) => {
+            if (!obj || typeof obj !== 'object') return;
+            if ('size' in obj && typeof obj.size === 'string') {
+              foundSizes.push(obj.size.trim());
+            }
+            if ('offers' in obj && Array.isArray(obj.offers)) {
+              obj.offers.forEach((o: any) => {
+                if (o && typeof o === 'object') {
+                  if (o.size && typeof o.size === 'string') foundSizes.push(o.size.trim());
+                  if (o.name && typeof o.name === 'string' && o.name.length < 15) foundSizes.push(o.name.trim());
+                }
+              });
+            }
+            for (const key in obj) {
+              searchSizes(obj[key]);
+            }
+          };
+          searchSizes(data);
+        } catch (e) {}
+      });
+
+      if (foundSizes.length === 0) {
+        const stdSizes = ['xxs', 'xs', 's', 'm', 'l', 'xl', 'xxl', 'xxxl'];
+        stdSizes.forEach(size => {
+          const regex = new RegExp(`\\b${size}\\b`, 'i');
+          const shortText = (docObj.title + ' ' + (docObj.querySelector('meta[name="description"]')?.getAttribute('content') || '')).toLowerCase();
+          if (regex.test(shortText)) {
+            foundSizes.push(size.toUpperCase());
+          }
+        });
+      }
+
+      const unique = Array.from(new Set(foundSizes)).filter(s => s && s.length < 15);
+      return unique.join(', ');
+    };
+
     try {
       const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
       const html = await response.text();
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, 'text/html');
-      const title = doc.querySelector('meta[property="og:title"]')?.getAttribute('content')?.replace(/\| Temu.*/g, '').trim() || '';
-      const desc = doc.querySelector('meta[name="description"]')?.getAttribute('content') || '';
-      const img = doc.querySelector('meta[property="og:image"]')?.getAttribute('content') || '';
+
+      const rawTitle = doc.querySelector('meta[property="og:title"]')?.getAttribute('content')?.replace(/\| Temu.*/g, '').trim() || '';
+      const rawDesc = doc.querySelector('meta[name="description"]')?.getAttribute('content') || doc.querySelector('meta[property="og:description"]')?.getAttribute('content') || '';
+
+      const translatedTitle = await translateToSpanish(rawTitle);
+      const translatedDesc = await translateToSpanish(rawDesc);
+
+      let img = doc.querySelector('meta[property="og:image"]')?.getAttribute('content') || '';
+      if (img && img.startsWith('//')) {
+        img = 'https:' + img;
+      }
+
+      let extractedPrice: number | null = null;
+      const jsonLdScripts = doc.querySelectorAll('script[type="application/ld+json"]');
+      jsonLdScripts.forEach(script => {
+        try {
+          const data = JSON.parse(script.textContent || '');
+          const searchPrice = (obj: any) => {
+            if (!obj || typeof obj !== 'object') return;
+            if ('price' in obj && (typeof obj.price === 'string' || typeof obj.price === 'number')) {
+              const p = parseFloat(String(obj.price).replace(/[^\d.]/g, ''));
+              if (!isNaN(p) && p > 0) {
+                extractedPrice = p;
+                return;
+              }
+            }
+            if ('lowPrice' in obj && (typeof obj.lowPrice === 'string' || typeof obj.lowPrice === 'number')) {
+              const p = parseFloat(String(obj.lowPrice).replace(/[^\d.]/g, ''));
+              if (!isNaN(p) && p > 0) {
+                extractedPrice = p;
+                return;
+              }
+            }
+            for (const key in obj) {
+              searchPrice(obj[key]);
+            }
+          };
+          searchPrice(data);
+        } catch (e) {}
+      });
+
+      if (!extractedPrice) {
+        const priceMeta = doc.querySelector('meta[property="product:price:amount"], meta[property="og:price:amount"], meta[name="twitter:data1"]');
+        if (priceMeta) {
+          const pStr = priceMeta.getAttribute('content') || priceMeta.getAttribute('value') || '';
+          const p = parseFloat(pStr.replace(/[^\d.]/g, ''));
+          if (!isNaN(p) && p > 0) {
+            extractedPrice = p;
+          }
+        }
+      }
+
+      let finalPrice = '';
+      if (extractedPrice) {
+        let p = extractedPrice;
+        if (p < 200) {
+          p = p * 4000;
+        }
+        const priceWithTax = p * 1.10;
+        finalPrice = String(Math.round(priceWithTax / 100) * 100);
+      }
+
+      const sizesStr = extractSizes(doc);
+
       const newForms = [...bulkForms];
-      newForms[index] = { ...newForms[index], nombre: title, descripcion: desc, imagen_url: img };
+      newForms[index] = {
+        ...newForms[index],
+        nombre: translatedTitle,
+        descripcion: translatedDesc,
+        precio: finalPrice,
+        imagen_url: img,
+        tallas: sizesStr
+      };
       setBulkForms(newForms);
       showToast('Datos extraídos automáticamente ✓');
-    } catch {
+    } catch (err) {
+      console.error(err);
       showToast('No se pudo extraer. Completa manualmente.', 'error');
     }
     setLoading(false);
