@@ -1,223 +1,218 @@
 .home-page {
   display: flex;
   flex-direction: column;
-  gap: 4rem;
+  gap: 3rem;
 }
 
-.hero {
-  margin-top: 2rem;
-}
-
-.hero-content {
-  padding: 4rem 2rem;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
-  background: linear-gradient(135deg, rgba(255, 182, 193, 0.4) 0%, rgba(255, 255, 255, 0.8) 100%);
+/* Hero Banner */
+.hero-banner {
+  background-color: #f7f3e8; /* Soft cream/yellowish background */
   border-radius: var(--radius-lg);
-}
-
-.hero h1 {
-  font-size: 3rem;
-  background: linear-gradient(90deg, #FF758C 0%, #FF7EB3 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 0.5rem;
-}
-
-.hero-subtitle {
-  font-size: 1.25rem;
-  color: var(--text-muted);
-  max-width: 600px;
-}
-
-.hero-actions {
-  margin-top: 1rem;
-}
-
-.features {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 2rem;
-}
-
-.feature-card {
-  padding: 2rem;
-  text-align: center;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.feature-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-lg);
-}
-
-.feature-icon {
-  color: var(--primary);
-}
-
-.feature-card h3 {
-  font-size: 1.25rem;
-}
-
-.feature-card p {
-  color: var(--text-muted);
-  font-size: 0.95rem;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 3rem;
-}
-
-.section-title {
-  font-size: 2.5rem;
+  overflow: hidden;
   position: relative;
 }
 
-.section-title::after {
-  content: '';
-  position: absolute;
-  bottom: -10px;
-  left: 0;
-  width: 60px;
-  height: 4px;
-  background: var(--primary);
-  border-radius: 2px;
+@media (min-width: 768px) {
+  .hero-banner {
+    flex-direction: row;
+    align-items: center;
+  }
 }
 
-.ver-todos-link {
-  color: var(--primary);
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 4px;
+.hero-text-content {
+  padding: 3rem 2rem;
+  flex: 1;
 }
 
+.hero-text-content h1 {
+  font-size: 3.5rem;
+  color: var(--secondary-dark);
+  margin-bottom: 1rem;
+  text-shadow: 2px 2px 0px rgba(255,255,255,0.8);
+}
+
+.hero-text-content p {
+  color: var(--text-main);
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+  max-width: 400px;
+}
+
+.hero-image-placeholder {
+  flex: 1;
+  min-height: 300px;
+}
+
+.hero-image-placeholder img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Welcome Section */
+.welcome-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .welcome-section {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.welcome-text {
+  flex: 2;
+}
+
+.welcome-text p {
+  margin-bottom: 1rem;
+  color: var(--text-main);
+  font-size: 0.95rem;
+}
+
+.welcome-image {
+  flex: 1;
+}
+
+.welcome-image img {
+  width: 100%;
+  border-radius: var(--radius-lg);
+  object-fit: cover;
+}
+
+.section-title {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Products */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 2.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.5rem;
 }
 
 .product-card {
-  overflow: hidden;
-  transition: transform 0.3s ease;
+  background: white;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .product-card:hover {
-  transform: translateY(-8px);
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
 }
 
 .product-image-container {
   width: 100%;
-  aspect-ratio: 4/5;
-  position: relative;
-  overflow: hidden;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  aspect-ratio: 1;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .product-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.5s ease;
-}
-
-.product-card:hover .product-image {
-  transform: scale(1.05);
-}
-
-.product-image-placeholder {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
-}
-
-.product-category-badge {
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
-  background: var(--glass-bg);
-  backdrop-filter: blur(4px);
-  padding: 0.25rem 0.75rem;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  color: var(--text-main);
-}
-
-.product-info {
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  flex: 1;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .product-info h4 {
   font-size: 1.1rem;
-  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--secondary-dark);
 }
 
-.product-description {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  flex: 1;
-}
-
-.product-bottom-row {
+.product-rating {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-top: auto;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border);
+  justify-content: center;
+  gap: 0.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.product-rating span {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: 0.3rem;
+  font-family: 'Nunito', sans-serif;
 }
 
 .product-price {
   font-size: 1.25rem;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--primary);
+  font-family: 'Fredoka', cursive;
 }
 
-.btn-small {
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-}
-
-.loading-container {
+/* Promos */
+.promos-section {
   display: flex;
   flex-direction: column;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .promos-section {
+    flex-direction: row;
+  }
+}
+
+.promo-banner {
+  flex: 1;
+  border-radius: var(--radius-md);
+  padding: 2.5rem;
+  color: white;
+  display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 4rem;
-  gap: 1rem;
-  color: var(--text-muted);
+}
+
+.banner-green {
+  background-color: var(--accent-green);
+}
+
+.banner-yellow {
+  background-color: var(--accent-yellow);
+}
+
+.promo-banner h3 {
+  font-size: 2rem;
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.promo-banner p {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.promo-link {
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 .spinner {
   animation: spin 1s linear infinite;
-  color: var(--primary);
+  color: var(--secondary-dark);
+  margin: 2rem auto;
+  display: block;
 }
 
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
-}
-
-.empty-state {
-  text-align: center;
-  padding: 4rem;
-  color: var(--text-muted);
 }

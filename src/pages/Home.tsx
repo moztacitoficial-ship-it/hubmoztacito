@@ -1,9 +1,11 @@
-import { ArrowRight, Star, Truck, ShieldCheck, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Producto } from '../types';
+import type { Producto } from '../types';
 import './Home.css';
+
+// Using lucide-react just for stars and loaders
+import { Star, Loader2 } from 'lucide-react';
 
 export default function Home() {
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -16,7 +18,7 @@ export default function Home() {
           .from('productos')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(3);
+          .limit(4);
         
         if (error) throw error;
         setProductos(data || []);
@@ -31,82 +33,88 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="home-page">
-      {/* Hero Section */}
-      <section className="hero container animate-fade-in">
-        <div className="hero-content glass-panel">
-          <h1>Dulces Sueños para tus Pequeños</h1>
-          <p className="hero-subtitle">
-            Descubre nuestra colección exclusiva de productos para bebé y pijamas estampadas.
-            Comodidad, estilo y ternura en cada prenda.
-          </p>
-          <div className="hero-actions">
-            <Link to="/products" className="btn-primary">
-              Ver Colección <ArrowRight size={20} />
-            </Link>
-          </div>
+    <div className="home-page animate-fade-in">
+      {/* Hero Slider Area */}
+      <section className="hero-banner">
+        <div className="hero-text-content">
+          <h1>Babies shoes</h1>
+          <p>One of the many benefits of being a baby is that you do not have to worry about color-matching your outfits - babies look good regardless of what they wear.</p>
+          <Link to="/products" className="btn-primary hero-btn">
+            Discover Now
+          </Link>
+        </div>
+        <div className="hero-image-placeholder">
+          {/* Unsplash Baby shoes image */}
+          <img src="https://images.unsplash.com/photo-1596814234568-19ebcc1af3fa?auto=format&fit=crop&q=80&w=800" alt="Baby Shoes" />
         </div>
       </section>
 
-      {/* Features */}
-      <section className="features container">
-        <div className="feature-card glass-panel">
-          <Truck className="feature-icon" size={32} />
-          <h3>Envío Rápido</h3>
-          <p>Llevamos tus productos a la puerta de tu casa en tiempo récord.</p>
+      {/* Welcome Section */}
+      <section className="welcome-section">
+        <div className="welcome-text">
+          <h2 className="section-title">Welcome To BiboStore</h2>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+          <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident.</p>
         </div>
-        <div className="feature-card glass-panel">
-          <ShieldCheck className="feature-icon" size={32} />
-          <h3>Compra Segura</h3>
-          <p>Tu información y pagos están 100% protegidos.</p>
-        </div>
-        <div className="feature-card glass-panel">
-          <Star className="feature-icon" size={32} />
-          <h3>Calidad Premium</h3>
-          <p>Materiales suaves y seguros, perfectos para la piel del bebé.</p>
+        <div className="welcome-image">
+          <img src="https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&q=80&w=400" alt="Kids playing" />
         </div>
       </section>
 
-      {/* Productos Destacados desde Supabase */}
-      <section className="featured-products container">
+      {/* New Arrivals (Products from DB) */}
+      <section className="new-arrivals">
         <div className="section-header">
-          <h2 className="section-title">Productos Destacados</h2>
-          <Link to="/products" className="ver-todos-link">Ver todo</Link>
+          <h2 className="section-title">New Arrivals</h2>
         </div>
         
         {cargando ? (
           <div className="loading-container">
             <Loader2 className="spinner" size={48} />
-            <p>Cargando lo mejor para tu bebé...</p>
-          </div>
-        ) : productos.length === 0 ? (
-          <div className="empty-state glass-panel">
-            <p>Aún no hay productos en la tienda. ¡Vuelve pronto!</p>
           </div>
         ) : (
           <div className="products-grid">
             {productos.map((producto) => (
-              <div key={producto.id} className="product-card glass-panel">
+              <div key={producto.id} className="product-card">
                 <div className="product-image-container">
                   {producto.imagen_url ? (
                     <img src={producto.imagen_url} alt={producto.nombre} className="product-image" />
                   ) : (
                     <div className="product-image-placeholder"></div>
                   )}
-                  <span className="product-category-badge">{producto.categoria === 'bebe' ? 'Bebés' : 'Pijamas'}</span>
                 </div>
                 <div className="product-info">
                   <h4>{producto.nombre}</h4>
-                  <p className="product-description">{producto.descripcion?.substring(0, 60)}...</p>
-                  <div className="product-bottom-row">
-                    <p className="product-price">${producto.precio.toFixed(2)}</p>
-                    <button className="btn-primary btn-small">Añadir</button>
+                  <div className="product-rating">
+                    <Star size={14} fill="#eab951" color="#eab951" />
+                    <Star size={14} fill="#eab951" color="#eab951" />
+                    <Star size={14} fill="#eab951" color="#eab951" />
+                    <Star size={14} fill="#eab951" color="#eab951" />
+                    <Star size={14} fill="#eab951" color="#eab951" />
+                    <span>( 5 reviews )</span>
                   </div>
+                  <p className="product-price">${producto.precio.toFixed(2)}</p>
                 </div>
               </div>
             ))}
           </div>
         )}
+      </section>
+
+      {/* Promos */}
+      <section className="promos-section">
+        <div className="promo-banner banner-green">
+          <div className="promo-text">
+            <h3>Big Sale</h3>
+            <p>Discount 25% for Summer Holiday</p>
+          </div>
+        </div>
+        <div className="promo-banner banner-yellow">
+          <div className="promo-text">
+            <h3>Educational Toys</h3>
+            <p>Open new worlds of imagination and discovery.</p>
+            <Link to="/products" className="promo-link">View All Collection &gt;</Link>
+          </div>
+        </div>
       </section>
     </div>
   );

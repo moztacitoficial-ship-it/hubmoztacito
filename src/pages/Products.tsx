@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Producto } from '../types';
+import type { Producto } from '../types';
 import { Loader2, Search } from 'lucide-react';
 import './Products.css';
 

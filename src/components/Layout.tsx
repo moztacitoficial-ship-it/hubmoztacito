@@ -1,25 +1,37 @@
 import { Outlet, Link } from 'react-router-dom';
-import { ShoppingCart, Menu } from 'lucide-react';
+import { ShoppingCart, Menu, Baby, PersonStanding, Puzzle, GraduationCap, Phone } from 'lucide-react';
 import './Layout.css';
 
 export default function Layout() {
   return (
-    <div className="layout-container">
-      <header className="header glass-panel">
-        <div className="container flex items-center justify-between header-content">
-          <Link to="/" className="brand-logo">
-            <span>Bebé</span> & Pijamas
-          </Link>
-          
-          <nav className="desktop-nav">
-            <Link to="/" className="nav-link">Inicio</Link>
-            <Link to="/products" className="nav-link">Catálogo</Link>
-            <Link to="/contact" className="nav-link">Contacto</Link>
+    <div className="layout-wrapper">
+      <header className="main-header">
+        <div className="header-top container">
+          <nav className="header-nav">
+            <Link to="/" className="nav-link">Home</Link>
+            <Link to="/blog" className="nav-link">Our Blog</Link>
+            <Link to="/about" className="nav-link">About Us</Link>
+            <Link to="/contact" className="nav-link">Contact Us</Link>
           </nav>
           
+          <div className="logo-container">
+            <Link to="/" className="brand-logo-img">
+              <div className="logo-circle">
+                <span className="logo-letter c1">B</span>
+                <span className="logo-letter c2">i</span>
+                <span className="logo-letter c3">b</span>
+                <span className="logo-letter c4">o</span>
+              </div>
+              <span className="logo-text">Children Paradise</span>
+            </Link>
+          </div>
+
           <div className="header-actions">
+            <div className="language-selector">
+              <span>🇬🇧 ENG</span>
+            </div>
             <button className="cart-btn" aria-label="Carrito de compras">
-              <ShoppingCart size={24} />
+              <ShoppingCart size={22} />
               <span className="cart-badge">0</span>
             </button>
             <button className="mobile-menu-btn" aria-label="Menú">
@@ -27,15 +39,50 @@ export default function Layout() {
             </button>
           </div>
         </div>
+        <div className="header-scallop-border"></div>
       </header>
 
-      <main className="main-content">
-        <Outlet />
-      </main>
+      <div className="layout-content container">
+        <aside className="main-sidebar">
+          <div className="sidebar-menu">
+            <Link to="/products" className="sidebar-link">
+              <div className="sidebar-icon-wrapper i1"><Baby size={20}/></div>
+              Babies
+            </Link>
+            <Link to="/products" className="sidebar-link">
+              <div className="sidebar-icon-wrapper i2"><PersonStanding size={20}/></div>
+              Kids
+            </Link>
+            <Link to="/products" className="sidebar-link">
+              <div className="sidebar-icon-wrapper i3"><Puzzle size={20}/></div>
+              Puzzles
+            </Link>
+            <Link to="/products" className="sidebar-link">
+              <div className="sidebar-icon-wrapper i4"><GraduationCap size={20}/></div>
+              Educational Toys
+            </Link>
+            <Link to="/products" className="sidebar-link">
+              <div className="sidebar-icon-wrapper i1"><Phone size={20}/></div>
+              Pacifier
+            </Link>
+          </div>
 
-      <footer className="footer">
+          <div className="newsletter-box">
+            <h4>Newsletter</h4>
+            <p>Sign up for newsletter to receive special offers</p>
+            <input type="email" placeholder="Enter Your Email" className="newsletter-input"/>
+            <button className="btn-primary btn-small newsletter-btn">Subscribe</button>
+          </div>
+        </aside>
+
+        <main className="main-area">
+          <Outlet />
+        </main>
+      </div>
+      
+      <footer className="main-footer">
         <div className="container">
-          <p>&copy; {new Date().getFullYear()} Tienda Bebé & Pijamas. Todos los derechos reservados.</p>
+          <p>&copy; {new Date().getFullYear()} Bibo Store. All rights reserved.</p>
         </div>
       </footer>
     </div>

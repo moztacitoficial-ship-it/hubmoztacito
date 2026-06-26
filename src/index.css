@@ -1,19 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap');
+
 :root {
-  --primary: #FFB6C1; /* Light pink for baby/pajamas theme */
-  --primary-hover: #FF99A8;
-  --secondary: #87CEEB; /* Soft sky blue */
-  --background: #FAFAFA;
-  --surface: #FFFFFF;
-  --text-main: #2D3748;
-  --text-muted: #718096;
-  --border: #E2E8F0;
-  --radius-md: 12px;
-  --radius-lg: 24px;
-  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.3);
+  --primary: #f36b8e;      /* Pink */
+  --primary-hover: #e05579;
+  --secondary: #92d0db;    /* Light Cyan/Blue */
+  --secondary-dark: #4bb7c7;
+  --accent-green: #6ac9b9;
+  --accent-yellow: #eab951;
+  
+  --background: #ffffff;
+  --surface: #ffffff;
+  --text-main: #666666;
+  --text-title: #4bb7c7;
+  --border: #f0f0f0;
+  
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 30px;
+  --radius-pill: 999px;
+  
+  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 15px 30px -5px rgba(0, 0, 0, 0.08);
 }
 
 * {
@@ -23,7 +31,7 @@
 }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Nunito', system-ui, -apple-system, sans-serif;
   background-color: var(--background);
   color: var(--text-main);
   line-height: 1.6;
@@ -31,9 +39,11 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-weight: 700;
+  font-family: 'Fredoka', cursive;
+  font-weight: 600;
   line-height: 1.2;
-  color: var(--text-main);
+  color: var(--text-title);
+  letter-spacing: 0.5px;
 }
 
 a {
@@ -48,64 +58,39 @@ button {
   font-family: inherit;
 }
 
-/* Utilities */
 .container {
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 0 1.5rem;
-}
-
-.glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-md);
-  border-radius: var(--radius-lg);
 }
 
 .btn-primary {
   background-color: var(--primary);
   color: #fff;
-  padding: 0.75rem 1.5rem;
-  border-radius: 999px;
-  font-weight: 600;
+  padding: 0.8rem 2rem;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.1rem;
   transition: all 0.3s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  box-shadow: 0 4px 14px 0 rgba(255, 182, 193, 0.39);
+  box-shadow: 0 4px 10px 0 rgba(243, 107, 142, 0.4);
 }
 
 .btn-primary:hover {
   background-color: var(--primary-hover);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 182, 193, 0.23);
-}
-
-.grid {
-  display: grid;
-}
-
-.flex {
-  display: flex;
-}
-
-.items-center {
-  align-items: center;
-}
-
-.justify-between {
-  justify-content: space-between;
-}
-
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  box-shadow: 0 6px 15px rgba(243, 107, 142, 0.5);
 }
 
 .animate-fade-in {
   animation: fadeIn 0.6s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
