@@ -8,13 +8,9 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* La nueva interfaz estilo app será la página principal */}
+        <Route path="/" element={<MenuDigital />} />
         <Route path="/menu" element={<MenuDigital />} />
-        
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="products" element={<Products />} />
-          {/* Add more routes here like /cart */}
-        </Route>
       </Routes>
     </Router>
   );
