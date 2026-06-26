@@ -40,7 +40,10 @@ export default function Admin() {
 
   const [productos, setProductos] = useState<Producto[]>([]);
   const [categoriasData, setCategoriasData] = useState<Categoria[]>([]);
-  const [_subcategoriasData, _setSubcategoriasData] = useState<Subcategoria[]>([]);
+  const [subcategoriasData, setSubcategoriasData] = useState<Subcategoria[]>([]);
+  const [subcatNombre, setSubcatNombre] = useState('');
+  const [subcatSlug, setSubcatSlug] = useState('');
+  const [subcatParentId, setSubcatParentId] = useState('');
   const [configuracion, setConfiguracion] = useState<Configuracion | null>(null);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -68,7 +71,7 @@ export default function Admin() {
       ]);
       if (prodRes.data) setProductos(prodRes.data);
       if (catRes.data) setCategoriasData(catRes.data);
-      if (subcatRes.data) _setSubcategoriasData(subcatRes.data);
+      if (subcatRes.data) setSubcategoriasData(subcatRes.data);
       if (confRes.data) setConfiguracion(confRes.data);
     } catch (err) {
       console.error('Error cargando datos:', err);
@@ -345,6 +348,7 @@ export default function Admin() {
       descripcion: editingProduct.descripcion,
       precio: editingProduct.precio,
       categoria: editingProduct.categoria,
+      subcategoria: editingProduct.subcategoria || null,
       imagen_url: editingProduct.imagen_url,
       video_url: editingProduct.video_url,
       tallas: editingProduct.tallas
@@ -352,6 +356,39 @@ export default function Admin() {
     setLoading(false);
     if (error) showToast('Error al actualizar', 'error');
     else { showToast('Producto actualizado ✓'); setEditingProduct(null); cargarDatos(); }
+  };
+
+  const handleCreateSubcategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!subcatNombre.trim() || !subcatParentId) {
+      showToast('Completa el nombre y selecciona la categoría padre', 'error');
+      return;
+    }
+    setLoading(true);
+    const slug = subcatSlug.trim() || subcatNombre.toLowerCase().replace(/ /g, '-').replace(/[^\w-]/g, '');
+    const { error } = await supabase.from('subcategorias').insert([
+      { nombre: subcatNombre.trim(), slug, categoria_id: subcatParentId }
+    ]);
+    setLoading(false);
+    if (error) {
+      showToast('Error: ' + error.message, 'error');
+    } else {
+      setSubcatNombre('');
+      setSubcatSlug('');
+      cargarDatos();
+      showToast('Subcategoría creada ✓');
+    }
+  };
+
+  const handleDeleteSubcategory = async (id: string) => {
+    if (!window.confirm('¿Eliminar esta subcategoría?')) return;
+    const { error } = await supabase.from('subcategorias').delete().eq('id', id);
+    if (!error) {
+      cargarDatos();
+      showToast('Subcategoría eliminada');
+    } else {
+      showToast('Error al eliminar', 'error');
+    }
   };
 
   const filteredProducts = productos.filter(p =>
