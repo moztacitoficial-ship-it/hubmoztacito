@@ -8,6 +8,8 @@ function App() {
         {/* La nueva interfaz estilo app será la página principal */}
         <Route path="/" element={<MenuDigital />} />
         <Route path="/menu" element={<MenuDigital />} />
+        {/* Fallback para URLs antiguas como /products */}
+        <Route path="*" element={<MenuDigital />} />
       </Routes>
     </Router>
   );
