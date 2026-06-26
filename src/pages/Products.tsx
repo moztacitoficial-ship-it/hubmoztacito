@@ -95,7 +95,15 @@ export default function Products() {
                 <p className="product-description">{producto.descripcion?.substring(0, 80)}...</p>
                 <div className="product-bottom-row">
                   <p className="product-price">${producto.precio.toFixed(2)}</p>
-                  <button className="btn-primary btn-small">Añadir</button>
+                  <button 
+                    className="btn-whatsapp"
+                    onClick={() => {
+                      const msg = `Hola! Me interesa pedir:\n\n*${producto.nombre}*\nPrecio: $${producto.precio}`;
+                      window.open(`https://wa.me/1234567890?text=${encodeURIComponent(msg)}`, '_blank');
+                    }}
+                  >
+                    Pedir por WhatsApp
+                  </button>
                 </div>
               </div>
             </div>

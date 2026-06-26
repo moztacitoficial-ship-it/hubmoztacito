@@ -45,10 +45,15 @@ export default function MenuDigital() {
     <div className="menu-digital-page">
       <div className="menu-header">
         <div className="menu-logo">
-           <span className="logo-letter c1">B</span>
-           <span className="logo-letter c2">i</span>
-           <span className="logo-letter c3">b</span>
-           <span className="logo-letter c4">o</span>
+           <span className="logo-letter c1">M</span>
+           <span className="logo-letter c2">o</span>
+           <span className="logo-letter c3">z</span>
+           <span className="logo-letter c4">t</span>
+           <span className="logo-letter c1">a</span>
+           <span className="logo-letter c2">c</span>
+           <span className="logo-letter c3">i</span>
+           <span className="logo-letter c4">t</span>
+           <span className="logo-letter c1">o</span>
         </div>
         <h1>Menú Digital</h1>
       </div>

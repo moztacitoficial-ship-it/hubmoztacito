@@ -17,12 +17,17 @@ export default function Layout() {
           <div className="logo-container">
             <Link to="/" className="brand-logo-img">
               <div className="logo-circle">
-                <span className="logo-letter c1">B</span>
-                <span className="logo-letter c2">i</span>
-                <span className="logo-letter c3">b</span>
-                <span className="logo-letter c4">o</span>
+                <span className="logo-letter c1">M</span>
+                <span className="logo-letter c2">o</span>
+                <span className="logo-letter c3">z</span>
+                <span className="logo-letter c4">t</span>
+                <span className="logo-letter c1">a</span>
+                <span className="logo-letter c2">c</span>
+                <span className="logo-letter c3">i</span>
+                <span className="logo-letter c4">t</span>
+                <span className="logo-letter c1">o</span>
               </div>
-              <span className="logo-text">Children Paradise</span>
+              <span className="logo-text">Store</span>
             </Link>
           </div>
 

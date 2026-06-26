@@ -8,20 +8,21 @@
   --accent-green: #6ac9b9;
   --accent-yellow: #eab951;
   
-  --background: #ffffff;
+  --background: #fcfcfc;
   --surface: #ffffff;
   --text-main: #666666;
   --text-title: #4bb7c7;
-  --border: #f0f0f0;
+  --border: #edf2f7;
   
-  --radius-sm: 12px;
-  --radius-md: 20px;
-  --radius-lg: 30px;
+  --radius-sm: 16px;
+  --radius-md: 24px;
+  --radius-lg: 32px;
   --radius-pill: 999px;
   
-  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
-  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 15px 30px -5px rgba(0, 0, 0, 0.08);
+  /* Softer, more premium shadows */
+  --shadow-sm: 0 4px 12px rgba(146, 208, 219, 0.15);
+  --shadow-md: 0 12px 24px rgba(146, 208, 219, 0.2);
+  --shadow-lg: 0 20px 40px rgba(146, 208, 219, 0.25);
 }
 
 * {
@@ -33,9 +34,41 @@
 body {
   font-family: 'Nunito', system-ui, -apple-system, sans-serif;
   background-color: var(--background);
+  /* Subtle dot pattern */
+  background-image: radial-gradient(var(--border) 1.5px, transparent 1.5px);
+  background-size: 20px 20px;
   color: var(--text-main);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Global Utility Classes */
+.btn-whatsapp {
+  background-color: #25D366;
+  color: white;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 0.6rem 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-whatsapp:hover {
+  background-color: #128C7E;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(37, 211, 102, 0.4);
+}
+
+.product-bottom-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
 }
 
 h1, h2, h3, h4, h5, h6 {

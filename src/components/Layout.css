@@ -180,31 +180,22 @@
 
 .sidebar-menu {
   background-color: var(--secondary);
-  border-radius: var(--radius-lg);
+  border-radius: 20px;
   padding: 1.5rem 0;
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow-md);
   position: relative;
-}
-
-/* Scalloped top/bottom for sidebar */
-.sidebar-menu::before, .sidebar-menu::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  width: 100%;
-  height: 15px;
-  background-size: 30px 15px;
-  background-repeat: repeat-x;
-}
-.sidebar-menu::before {
-  top: -14px;
-  background-image: radial-gradient(circle at 15px 15px, var(--secondary) 15px, transparent 16px);
-}
-.sidebar-menu::after {
-  bottom: -14px;
-  background-image: radial-gradient(circle at 15px 0, var(--secondary) 15px, transparent 16px);
+  /* Use mask for clean scalloped edges without corner bleed */
+  -webkit-mask-image: radial-gradient(circle at 15px 0px, transparent 12px, black 13px), radial-gradient(circle at 15px 100%, transparent 12px, black 13px), linear-gradient(black, black);
+  -webkit-mask-size: 30px 20px, 30px 20px, 100% calc(100% - 40px);
+  -webkit-mask-position: top left, bottom left, center;
+  -webkit-mask-repeat: repeat-x, repeat-x, no-repeat;
+  mask-image: radial-gradient(circle at 15px 0px, transparent 12px, black 13px), radial-gradient(circle at 15px 100%, transparent 12px, black 13px), linear-gradient(black, black);
+  mask-size: 30px 20px, 30px 20px, 100% calc(100% - 40px);
+  mask-position: top left, bottom left, center;
+  mask-repeat: repeat-x, repeat-x, no-repeat;
+  padding: 2.5rem 0; /* extra padding to account for the cutouts */
 }
 
 .sidebar-link {

@@ -92,7 +92,18 @@ export default function Home() {
                     <Star size={14} fill="#eab951" color="#eab951" />
                     <span>( 5 reviews )</span>
                   </div>
-                  <p className="product-price">${producto.precio.toFixed(2)}</p>
+                  <div className="product-bottom-row">
+                    <p className="product-price">${producto.precio.toFixed(2)}</p>
+                    <button 
+                      className="btn-whatsapp"
+                      onClick={() => {
+                        const msg = `Hola! Me interesa pedir:\n\n*${producto.nombre}*\nPrecio: $${producto.precio}`;
+                        window.open(`https://wa.me/1234567890?text=${encodeURIComponent(msg)}`, '_blank');
+                      }}
+                    >
+                      Pedir por WhatsApp
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
