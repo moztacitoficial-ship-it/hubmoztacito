@@ -10,8 +10,15 @@ export default function MenuDigital() {
   const [cargando, setCargando] = useState(true);
   const [filtroCategoria, setFiltroCategoria] = useState<string>('todos');
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isCheckoutMode, setIsCheckoutMode] = useState(false);
+  const [formData, setFormData] = useState({
+    nombre: '',
+    telefono: '',
+    direccion: '',
+    ciudad: ''
+  });
 
-  const { items, addToCart, removeFromCart, updateQuantity, total } = useCart();
+  const { items, addToCart, removeFromCart, updateQuantity, total, clearCart } = useCart();
 
   useEffect(() => {
     async function cargarProductos() {
@@ -38,6 +45,35 @@ export default function MenuDigital() {
     : productos.filter(p => p.categoria === filtroCategoria);
 
   const totalItems = items.reduce((sum, item) => sum + item.cantidad, 0);
+
+  const handleEnviarPedido = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Construir el mensaje para WhatsApp
+    let mensaje = `*¡NUEVO PEDIDO!*\n\n`;
+    mensaje += `*Cliente:* ${formData.nombre}\n`;
+    mensaje += `*Teléfono:* ${formData.telefono}\n`;
+    mensaje += `*Dirección:* ${formData.direccion}, ${formData.ciudad}\n\n`;
+    
+    mensaje += `*PRODUCTOS:*\n`;
+    items.forEach(item => {
+      mensaje += `- ${item.cantidad}x ${item.nombre} ($${(item.precio * item.cantidad).toFixed(2)})\n`;
+    });
+    
+    mensaje += `\n*TOTAL:* $${total.toFixed(2)}\n\n`;
+    mensaje += `Por favor indícame los métodos de pago para confirmar mi compra.`;
+
+    const numeroWhatsApp = '1234567890'; // ¡Cambiar por tu número!
+    const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+    
+    window.open(url, '_blank');
+    
+    // Limpiar después de enviar
+    setIsCartOpen(false);
+    setIsCheckoutMode(false);
+    clearCart();
+    setFormData({ nombre: '', telefono: '', direccion: '', ciudad: '' });
+  };
 
   return (
     <div className="menu-app-container">
@@ -143,7 +179,7 @@ export default function MenuDigital() {
       </div>
 
       {/* Floating Cart Button */}
-      {totalItems > 0 && (
+      {totalItems > 0 && !isCartOpen && (
         <button className="floating-cart-btn" onClick={() => setIsCartOpen(true)}>
           <div className="cart-icon-wrapper">
             <ShoppingBag size={24} />
@@ -158,50 +194,119 @@ export default function MenuDigital() {
         <div className="cart-modal-overlay">
           <div className="cart-modal">
             <div className="cart-header">
-              <h3>Tu Pedido</h3>
-              <button onClick={() => setIsCartOpen(false)} className="close-btn"><X size={24} /></button>
-            </div>
-            
-            <div className="cart-items">
-              {items.length === 0 ? (
-                <p className="empty-cart">Tu carrito está vacío.</p>
-              ) : (
-                items.map(item => (
-                  <div key={item.id} className="cart-item">
-                    <div className="cart-item-img">
-                      {item.imagen_url ? <img src={item.imagen_url} alt={item.nombre} /> : <div className="img-placeholder-small"></div>}
-                    </div>
-                    <div className="cart-item-info">
-                      <h5>{item.nombre}</h5>
-                      <p>${item.precio.toFixed(2)}</p>
-                    </div>
-                    <div className="cart-item-actions">
-                      <button onClick={() => updateQuantity(item.id, item.cantidad - 1)} disabled={item.cantidad <= 1}><Minus size={14}/></button>
-                      <span>{item.cantidad}</span>
-                      <button onClick={() => updateQuantity(item.id, item.cantidad + 1)}><Plus size={14}/></button>
-                      <button className="remove-btn" onClick={() => removeFromCart(item.id)}><X size={14}/></button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="cart-footer">
-              <div className="cart-total">
-                <span>Total:</span>
-                <span>${total.toFixed(2)}</span>
-              </div>
+              <h3>{isCheckoutMode ? 'Datos de Envío' : 'Tu Pedido'}</h3>
               <button 
-                className="checkout-btn" 
-                disabled={items.length === 0}
                 onClick={() => {
-                  alert("Procediendo al Checkout...");
-                  // Aquí conectaremos Stripe después
-                }}
+                  setIsCartOpen(false);
+                  setIsCheckoutMode(false);
+                }} 
+                className="close-btn"
               >
-                Pagar Pedido
+                <X size={24} />
               </button>
             </div>
+            
+            {isCheckoutMode ? (
+              <form className="checkout-form" onSubmit={handleEnviarPedido}>
+                <div className="form-group">
+                  <label>Nombre Completo</label>
+                  <input 
+                    type="text" 
+                    required 
+                    value={formData.nombre}
+                    onChange={e => setFormData({...formData, nombre: e.target.value})}
+                    placeholder="Ej. Juan Pérez"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Teléfono (WhatsApp)</label>
+                  <input 
+                    type="tel" 
+                    required 
+                    value={formData.telefono}
+                    onChange={e => setFormData({...formData, telefono: e.target.value})}
+                    placeholder="Ej. +52 123 456 7890"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Ciudad</label>
+                  <input 
+                    type="text" 
+                    required 
+                    value={formData.ciudad}
+                    onChange={e => setFormData({...formData, ciudad: e.target.value})}
+                    placeholder="Ej. Ciudad de México"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Dirección Exacta de Envío</label>
+                  <textarea 
+                    required 
+                    rows={3}
+                    value={formData.direccion}
+                    onChange={e => setFormData({...formData, direccion: e.target.value})}
+                    placeholder="Calle, Número, Colonia, Código Postal, Referencias..."
+                  />
+                </div>
+
+                <div className="cart-footer" style={{ marginTop: 'auto' }}>
+                  <div className="cart-total">
+                    <span>Total a Pagar:</span>
+                    <span>${total.toFixed(2)}</span>
+                  </div>
+                  <button type="submit" className="checkout-btn whatsapp-submit">
+                    Enviar Pedido por WhatsApp
+                  </button>
+                  <button 
+                    type="button" 
+                    className="back-btn" 
+                    onClick={() => setIsCheckoutMode(false)}
+                  >
+                    Volver al Carrito
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <>
+                <div className="cart-items">
+                  {items.length === 0 ? (
+                    <p className="empty-cart">Tu carrito está vacío.</p>
+                  ) : (
+                    items.map(item => (
+                      <div key={item.id} className="cart-item">
+                        <div className="cart-item-img">
+                          {item.imagen_url ? <img src={item.imagen_url} alt={item.nombre} /> : <div className="img-placeholder-small"></div>}
+                        </div>
+                        <div className="cart-item-info">
+                          <h5>{item.nombre}</h5>
+                          <p>${item.precio.toFixed(2)}</p>
+                        </div>
+                        <div className="cart-item-actions">
+                          <button onClick={() => updateQuantity(item.id, item.cantidad - 1)} disabled={item.cantidad <= 1}><Minus size={14}/></button>
+                          <span>{item.cantidad}</span>
+                          <button onClick={() => updateQuantity(item.id, item.cantidad + 1)}><Plus size={14}/></button>
+                          <button className="remove-btn" onClick={() => removeFromCart(item.id)}><X size={14}/></button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <div className="cart-footer">
+                  <div className="cart-total">
+                    <span>Total:</span>
+                    <span>${total.toFixed(2)}</span>
+                  </div>
+                  <button 
+                    className="checkout-btn" 
+                    disabled={items.length === 0}
+                    onClick={() => setIsCheckoutMode(true)}
+                  >
+                    Continuar Pedido
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
