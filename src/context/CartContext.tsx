@@ -4,13 +4,14 @@ import type { Producto } from '../types';
 
 export interface CartItem extends Producto {
   cantidad: number;
+  talla?: string; // Talla seleccionada
 }
 
 interface CartContextType {
   items: CartItem[];
-  addToCart: (producto: Producto) => void;
-  removeFromCart: (id: string) => void;
-  updateQuantity: (id: string, cantidad: number) => void;
+  addToCart: (producto: Producto, talla?: string) => void;
+  removeFromCart: (id: string, talla?: string) => void;
+  updateQuantity: (id: string, cantidad: number, talla?: string) => void;
   clearCart: () => void;
   total: number;
 }
@@ -27,29 +28,32 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('moztacito_cart', JSON.stringify(items));
   }, [items]);
 
-  const addToCart = (producto: Producto) => {
-    setItems(current => {
-      const existing = current.find(item => item.id === producto.id);
-      if (existing) {
-        return current.map(item => 
-          item.id === producto.id 
+  const addToCart = (producto: Producto, talla?: string) => {
+    setItems(prevItems => {
+      const existingItem = prevItems.find(item => item.id === producto.id && item.talla === talla);
+      if (existingItem) {
+        return prevItems.map(item =>
+          (item.id === producto.id && item.talla === talla)
             ? { ...item, cantidad: item.cantidad + 1 }
             : item
         );
       }
-      return [...current, { ...producto, cantidad: 1 }];
+      return [...prevItems, { ...producto, cantidad: 1, talla }];
     });
   };
 
-  const removeFromCart = (id: string) => {
-    setItems(current => current.filter(item => item.id !== id));
+  const removeFromCart = (id: string, talla?: string) => {
+    setItems(prevItems => prevItems.filter(item => !(item.id === id && item.talla === talla)));
   };
 
-  const updateQuantity = (id: string, cantidad: number) => {
-    if (cantidad < 1) return;
-    setItems(current => 
-      current.map(item => 
-        item.id === id ? { ...item, cantidad } : item
+  const updateQuantity = (id: string, cantidad: number, talla?: string) => {
+    if (cantidad < 1) {
+      removeFromCart(id, talla);
+      return;
+    }
+    setItems(prevItems =>
+      prevItems.map(item =>
+        (item.id === id && item.talla === talla) ? { ...item, cantidad } : item
       )
     );
   };

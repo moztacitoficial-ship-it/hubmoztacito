@@ -11,6 +11,10 @@ export default function MenuDigital() {
   const [filtroCategoria, setFiltroCategoria] = useState<string>('todos');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutMode, setIsCheckoutMode] = useState(false);
+  
+  // Size Selection State
+  const [sizeModalProduct, setSizeModalProduct] = useState<Producto | null>(null);
+  
   const [formData, setFormData] = useState({
     nombre: '',
     telefono: '',
@@ -29,16 +33,30 @@ export default function MenuDigital() {
           .order('created_at', { ascending: false });
         
         if (error) throw error;
-        setProductos(data || []);
-      } catch (error) {
-        console.error('Error cargando menú:', error);
+        if (data) setProductos(data);
+      } catch (err) {
+        console.error('Error cargando productos:', err);
       } finally {
         setCargando(false);
       }
     }
-
     cargarProductos();
   }, []);
+
+  const handleAddClick = (producto: Producto) => {
+    if (producto.tallas) {
+      setSizeModalProduct(producto);
+    } else {
+      addToCart(producto);
+    }
+  };
+
+  const handleSizeSelect = (talla: string) => {
+    if (sizeModalProduct) {
+      addToCart(sizeModalProduct, talla);
+      setSizeModalProduct(null);
+    }
+  };
 
   const productosFiltrados = filtroCategoria === 'todos' 
     ? productos 
@@ -56,9 +74,10 @@ export default function MenuDigital() {
     mensaje += `*Dirección:* ${formData.direccion}, ${formData.ciudad}\n\n`;
     
     mensaje += `*PRODUCTOS:*\n`;
-    items.forEach(item => {
-      mensaje += `- ${item.cantidad}x ${item.nombre} ($${(item.precio * item.cantidad).toFixed(2)})\n`;
-    });
+    const mensajeProductos = items.map(item => 
+      `- ${item.cantidad}x ${item.nombre} ${item.talla ? `(Talla: ${item.talla}) ` : ''}- $${(item.precio * item.cantidad).toFixed(2)}`
+    ).join('\n');
+    mensaje += mensajeProductos;
     
     mensaje += `\n*TOTAL:* $${total.toFixed(2)}\n\n`;
     mensaje += `Por favor indícame los métodos de pago para confirmar mi compra.`;
@@ -176,7 +195,7 @@ export default function MenuDigital() {
                 </div>
                 <button 
                   className="item-add-btn" 
-                  onClick={() => addToCart(producto)}
+                  onClick={() => handleAddClick(producto)}
                   aria-label="Añadir al carrito"
                 >
                   <Plus size={20} />
@@ -282,20 +301,23 @@ export default function MenuDigital() {
                     <p className="empty-cart">Tu carrito está vacío.</p>
                   ) : (
                     items.map(item => (
-                      <div key={item.id} className="cart-item">
+                      <div key={`${item.id}-${item.talla || 'none'}`} className="cart-item">
                         <div className="cart-item-img">
                           {item.imagen_url ? <img src={item.imagen_url} alt={item.nombre} /> : <div className="img-placeholder-small"></div>}
                         </div>
-                        <div className="cart-item-info">
-                          <h5>{item.nombre}</h5>
-                          <p>${item.precio.toFixed(2)}</p>
+                        <div className="cart-item-details">
+                          <h4>{item.nombre}</h4>
+                          {item.talla && <p style={{fontSize: '0.8rem', color: '#666', margin: '2px 0'}}>Talla: {item.talla}</p>}
+                          <p className="cart-item-price">${(item.precio * item.cantidad).toFixed(2)}</p>
+                          <div className="cart-item-qty">
+                            <button onClick={() => updateQuantity(item.id, item.cantidad - 1, item.talla)}>-</button>
+                            <span>{item.cantidad}</span>
+                            <button onClick={() => updateQuantity(item.id, item.cantidad + 1, item.talla)}>+</button>
+                          </div>
                         </div>
-                        <div className="cart-item-actions">
-                          <button onClick={() => updateQuantity(item.id, item.cantidad - 1)} disabled={item.cantidad <= 1}><Minus size={14}/></button>
-                          <span>{item.cantidad}</span>
-                          <button onClick={() => updateQuantity(item.id, item.cantidad + 1)}><Plus size={14}/></button>
-                          <button className="remove-btn" onClick={() => removeFromCart(item.id)}><X size={14}/></button>
-                        </div>
+                        <button className="cart-item-remove" onClick={() => removeFromCart(item.id, item.talla)}>
+                          <X size={20} />
+                        </button>
                       </div>
                     ))
                   )}
@@ -316,6 +338,41 @@ export default function MenuDigital() {
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* SIZE SELECTION MODAL */}
+      {sizeModalProduct && (
+        <div className="cart-modal-overlay" onClick={() => setSizeModalProduct(null)}>
+          <div className="cart-modal" onClick={e => e.stopPropagation()} style={{textAlign: 'center', padding: '2rem'}}>
+            <button className="close-modal-btn" onClick={() => setSizeModalProduct(null)}><X size={24} /></button>
+            <h3>Selecciona la Talla</h3>
+            <p style={{marginBottom: '1rem', color: '#666'}}>{sizeModalProduct.nombre}</p>
+            
+            <div style={{display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center'}}>
+              {sizeModalProduct.tallas?.split(',').map((t, idx) => {
+                const talla = t.trim();
+                if (!talla) return null;
+                return (
+                  <button 
+                    key={idx} 
+                    onClick={() => handleSizeSelect(talla)}
+                    style={{
+                      padding: '0.8rem 1.5rem',
+                      border: '2px solid var(--primary)',
+                      borderRadius: '8px',
+                      background: 'white',
+                      color: 'var(--primary)',
+                      fontWeight: 'bold',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {talla}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

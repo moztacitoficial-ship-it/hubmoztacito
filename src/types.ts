@@ -6,5 +6,6 @@ export interface Producto {
   categoria: string;
   descripcion: string;
   video_url?: string;
+  tallas?: string;
   created_at: string;
 }

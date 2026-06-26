@@ -13,6 +13,7 @@ type ProductFormData = {
   categoria: string;
   imagen_url: string;
   video_url: string;
+  tallas: string;
 };
 
 const emptyProduct: ProductFormData = {
@@ -21,7 +22,8 @@ const emptyProduct: ProductFormData = {
   precio: '',
   categoria: 'bebe',
   imagen_url: '',
-  video_url: ''
+  video_url: '',
+  tallas: ''
 };
 
 export default function Admin() {
@@ -71,7 +73,8 @@ export default function Admin() {
       precio: producto.precio.toString(),
       categoria: producto.categoria,
       imagen_url: producto.imagen_url || '',
-      video_url: producto.video_url || ''
+      video_url: producto.video_url || '',
+      tallas: producto.tallas || ''
     });
     
     // Scroll to top
@@ -95,6 +98,7 @@ export default function Admin() {
       categoria: editForm.categoria,
       imagen_url: editForm.imagen_url,
       video_url: editForm.video_url || null,
+      tallas: editForm.tallas || null,
     };
 
     const { error } = await supabase
@@ -130,6 +134,47 @@ export default function Admin() {
     setBulkForms(newForms);
   };
 
+  const handleAutoFill = async (index: number) => {
+    const url = prompt('🔗 Pega el enlace completo de Temu aquí:');
+    if (!url) return;
+    
+    setLoading(true);
+    try {
+      // Usamos el endpoint raw para obtener el HTML directo
+      const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
+      if (!response.ok) throw new Error('Proxy falló');
+      
+      const html = await response.text();
+      
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      
+      let title = doc.querySelector('meta[property="og:title"]')?.getAttribute('content') || doc.querySelector('title')?.innerText || '';
+      title = title.replace(/\| Temu.*/g, '').trim();
+      
+      const desc = doc.querySelector('meta[name="description"]')?.getAttribute('content') || doc.querySelector('meta[property="og:description"]')?.getAttribute('content') || '';
+      
+      const img = doc.querySelector('meta[property="og:image"]')?.getAttribute('content') || '';
+      
+      if (!title && !img) {
+        throw new Error('No se encontraron metaetiquetas. Temu bloqueó la petición por ser un robot.');
+      }
+
+      const newForms = [...bulkForms];
+      newForms[index] = {
+        ...newForms[index],
+        nombre: title || newForms[index].nombre,
+        descripcion: desc || newForms[index].descripcion,
+        imagen_url: img || newForms[index].imagen_url
+      };
+      setBulkForms(newForms);
+    } catch (err) {
+      console.error('AutoFill Error:', err);
+      alert('Error al extraer datos de Temu. Puede que el enlace sea inválido o Temu esté bloqueando la conexión. Por favor, ingresa los datos manualmente.');
+    }
+    setLoading(false);
+  };
+
   const handleBulkSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -150,6 +195,7 @@ export default function Admin() {
       categoria: f.categoria,
       imagen_url: f.imagen_url,
       video_url: f.video_url || null,
+      tallas: f.tallas || null,
       stock: 100
     }));
 
@@ -236,6 +282,11 @@ export default function Admin() {
             </div>
 
             <div className="form-group">
+              <label>Tallas (Separadas por coma, Ej: 6 Meses, 12 Meses)</label>
+              <input type="text" value={editForm.tallas} onChange={e => setEditForm({...editForm, tallas: e.target.value})} />
+            </div>
+
+            <div className="form-group">
               <label>Enlace de la Foto (Obligatorio)</label>
               <input required type="url" value={editForm.imagen_url} onChange={e => setEditForm({...editForm, imagen_url: e.target.value})} />
             </div>
@@ -265,9 +316,14 @@ export default function Admin() {
                 <div key={index} className="bulk-row">
                   <div className="bulk-header">
                     <h4>Producto {index + 1}</h4>
-                    {bulkForms.length > 1 && (
-                      <button type="button" onClick={() => removeBulkRow(index)} className="bulk-remove"><X size={16}/></button>
-                    )}
+                    <div style={{display: 'flex', gap: '0.5rem'}}>
+                      <button type="button" onClick={() => handleAutoFill(index)} className="autofill-btn" title="Extraer datos de Temu">
+                        ✨ AutoFill
+                      </button>
+                      {bulkForms.length > 1 && (
+                        <button type="button" onClick={() => removeBulkRow(index)} className="bulk-remove"><X size={16}/></button>
+                      )}
+                    </div>
                   </div>
                   
                   <div className="form-group">
@@ -281,6 +337,10 @@ export default function Admin() {
                       <option value="pijamas">Pijamas</option>
                       <option value="mamelucos">Mamelucos</option>
                     </select>
+                  </div>
+
+                  <div className="form-group">
+                    <input type="text" value={form.tallas} onChange={e => updateBulkForm(index, 'tallas', e.target.value)} placeholder="Tallas (separadas por coma, Ej: 6 Meses, 12 Meses)" />
                   </div>
 
                   <div className="form-group">
