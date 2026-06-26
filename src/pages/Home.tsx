@@ -1,8 +1,35 @@
-import { ArrowRight, Star, Truck, ShieldCheck } from 'lucide-react';
-import './Home.css';
+import { ArrowRight, Star, Truck, ShieldCheck, Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
+import { Producto } from '../types';
+import './Home.css';
 
 export default function Home() {
+  const [productos, setProductos] = useState<Producto[]>([]);
+  const [cargando, setCargando] = useState(true);
+
+  useEffect(() => {
+    async function cargarProductosDestacados() {
+      try {
+        const { data, error } = await supabase
+          .from('productos')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(3);
+        
+        if (error) throw error;
+        setProductos(data || []);
+      } catch (error) {
+        console.error('Error cargando productos:', error);
+      } finally {
+        setCargando(false);
+      }
+    }
+
+    cargarProductosDestacados();
+  }, []);
+
   return (
     <div className="home-page">
       {/* Hero Section */}
@@ -40,36 +67,46 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Placeholder for Products */}
+      {/* Productos Destacados desde Supabase */}
       <section className="featured-products container">
-        <h2 className="section-title">Productos Destacados</h2>
-        <div className="products-grid">
-          {/* This is where Supabase products will map out */}
-          <div className="product-card glass-panel">
-            <div className="product-image-placeholder"></div>
-            <div className="product-info">
-              <h4>Pijama Estampada Dinosaurios</h4>
-              <p className="product-price">$25.00</p>
-              <button className="btn-primary">Añadir al carrito</button>
-            </div>
-          </div>
-          <div className="product-card glass-panel">
-            <div className="product-image-placeholder"></div>
-            <div className="product-info">
-              <h4>Conjunto Algodón Bebé</h4>
-              <p className="product-price">$30.00</p>
-              <button className="btn-primary">Añadir al carrito</button>
-            </div>
-          </div>
-          <div className="product-card glass-panel">
-            <div className="product-image-placeholder"></div>
-            <div className="product-info">
-              <h4>Manta Suave Estrellas</h4>
-              <p className="product-price">$18.00</p>
-              <button className="btn-primary">Añadir al carrito</button>
-            </div>
-          </div>
+        <div className="section-header">
+          <h2 className="section-title">Productos Destacados</h2>
+          <Link to="/products" className="ver-todos-link">Ver todo</Link>
         </div>
+        
+        {cargando ? (
+          <div className="loading-container">
+            <Loader2 className="spinner" size={48} />
+            <p>Cargando lo mejor para tu bebé...</p>
+          </div>
+        ) : productos.length === 0 ? (
+          <div className="empty-state glass-panel">
+            <p>Aún no hay productos en la tienda. ¡Vuelve pronto!</p>
+          </div>
+        ) : (
+          <div className="products-grid">
+            {productos.map((producto) => (
+              <div key={producto.id} className="product-card glass-panel">
+                <div className="product-image-container">
+                  {producto.imagen_url ? (
+                    <img src={producto.imagen_url} alt={producto.nombre} className="product-image" />
+                  ) : (
+                    <div className="product-image-placeholder"></div>
+                  )}
+                  <span className="product-category-badge">{producto.categoria === 'bebe' ? 'Bebés' : 'Pijamas'}</span>
+                </div>
+                <div className="product-info">
+                  <h4>{producto.nombre}</h4>
+                  <p className="product-description">{producto.descripcion?.substring(0, 60)}...</p>
+                  <div className="product-bottom-row">
+                    <p className="product-price">${producto.precio.toFixed(2)}</p>
+                    <button className="btn-primary btn-small">Añadir</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
